@@ -1,0 +1,12 @@
+{
+  "name": "agent-master",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build/build.mjs",
+    "clean": "rm -rf site"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}
