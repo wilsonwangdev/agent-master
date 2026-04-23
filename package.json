@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build/build.mjs",
-    "dev": "node build/build.mjs && npx -y serve site",
+    "dev": "node build/build.mjs && python3 -m http.server 3000 -d site",
     "watch": "node --watch-path=content --watch-path=build build/build.mjs",
     "clean": "rm -rf site",
     "clean-branches": "git fetch -p && git for-each-ref refs/heads --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" {print $1}' | xargs git branch -D",
