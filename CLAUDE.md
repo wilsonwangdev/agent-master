@@ -39,13 +39,22 @@ Local development: run `npm run watch` in one terminal (auto-rebuilds on file ch
 
 ## Git Workflow
 
+### Before starting any work
+
+1. `git fetch -p` — sync remote state and prune deleted branches
+2. `npm run clean-branches` — delete merged local branches
+3. `git checkout main && git pull` — ensure main is up to date before branching
+4. Plan PR boundaries: list each independent concern as a separate PR BEFORE writing code. If a task touches unrelated files (e.g. path fix + font change + new command), it is multiple PRs.
+5. Check file overlap between planned PRs. If two PRs modify the same file, declare dependency and define merge order. The later PR rebases after the earlier one merges.
+
+### Branch and PR rules
+
 - Never push directly to `main`. Always: branch → commit → push → PR.
 - Branch from `main`, name with prefix: `infra/`, `content/`, `build/`, `rule/`, `spec/`
-- One concern per branch and per PR. If changes are unrelated, split them.
+- One concern per branch and per PR. Test: can you describe it in one sentence without "and"?
 - Atomic commits: one logical change, prefixed message explaining why.
-- After PR merge: `npm run clean-branches` to delete merged local branches.
-- Before starting work: `git fetch -p && git branch -v` to check stale branches.
-- See `rules/git-workflow.md` for the full rule.
+- After PR merge: `npm run clean-branches`
+- See `rules/git-workflow.md` and `specs/004-pr-boundaries.md` for full rules.
 
 ## Content Conventions
 
