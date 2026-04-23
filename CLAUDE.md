@@ -41,10 +41,11 @@ Local development: run `npm run watch` in one terminal (auto-rebuilds on file ch
 
 ### Before starting any work
 
-1. `git fetch -p && git branch -v` — clean stale branches first
+1. `git fetch -p` — sync remote state and prune deleted branches
 2. `npm run clean-branches` — delete merged local branches
-3. Plan PR boundaries: list each independent concern as a separate PR BEFORE writing code. If a task touches unrelated files (e.g. path fix + font change + new command), it is multiple PRs.
-4. Check file overlap between planned PRs. If two PRs modify the same file, declare dependency and define merge order. The later PR rebases after the earlier one merges.
+3. `git checkout main && git pull` — ensure main is up to date before branching
+4. Plan PR boundaries: list each independent concern as a separate PR BEFORE writing code. If a task touches unrelated files (e.g. path fix + font change + new command), it is multiple PRs.
+5. Check file overlap between planned PRs. If two PRs modify the same file, declare dependency and define merge order. The later PR rebases after the earlier one merges.
 
 ### Branch and PR rules
 
