@@ -39,9 +39,8 @@ npm run build     # generates site/ from content/
 - Branch from `main`, name with prefix: `infra/`, `content/`, `build/`, `rule/`, `spec/`
 - One concern per branch and per PR. If changes are unrelated, split them.
 - Atomic commits: one logical change, prefixed message explaining why.
-- After PR merge or close: delete the local branch.
+- After PR merge: `npm run clean-branches` to delete merged local branches.
 - Before starting work: `git fetch -p && git branch -v` to check stale branches.
-- Keep local main in sync: `git fetch origin && git branch -f main origin/main`
 - See `rules/git-workflow.md` for the full rule.
 
 ## Content Conventions
