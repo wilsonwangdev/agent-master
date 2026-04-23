@@ -19,12 +19,20 @@ build/       — Static site build system (Node ESM, marked only)
 site/        — Generated output (gitignored)
 ```
 
-## Build
+## Setup
 
 ```bash
 npm install
-npm run build    # generates site/ from content/
+npm run setup     # configures git hooks
+npm run build     # generates site/ from content/
 ```
+
+## Safety
+
+- `.gitguard` contains patterns that pre-commit hook will reject
+- When PII is discovered in tool output, add the pattern to `.gitguard` before committing
+- Never write usernames, emails, tokens, or account names from tool output into project files
+- See `rules/pii-protection.md` for the full rule
 
 ## Content Conventions
 
