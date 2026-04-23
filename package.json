@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build/build.mjs",
     "clean": "rm -rf site",
-    "clean-branches": "git fetch -p && git branch --merged origin/main | grep -v '\\*\\|main' | xargs -r git branch -d",
+    "clean-branches": "git fetch -p && git for-each-ref refs/heads --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" {print $1}' | xargs git branch -D",
     "prepare": "husky"
   },
   "dependencies": {
