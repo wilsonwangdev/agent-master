@@ -39,6 +39,21 @@ A PR is ready to merge when:
 - [ ] If it modifies CLAUDE.md, the changes are consistent with existing sections
 - [ ] Dependencies on other PRs are declared and already merged
 
+## Merge Strategy
+
+**Squash and merge** — the only enabled merge method on this repository.
+
+### Rationale
+
+- One PR = one concern. Squash produces one commit on main per PR, keeping history clean.
+- Intermediate commits within a PR (iterations, fixes, rebases) are development process, not project history. They don't belong on main.
+- Agents reading `git log` get one line per logical change — maximum signal, minimum noise.
+- Enforced at the repository level (GitHub settings: only "Squash and merge" enabled) so there is no decision to make at merge time.
+
+### Squash commit message
+
+Use the PR title as the commit message. GitHub auto-fills this when squash is selected. The PR body is preserved in the squash commit description for traceability.
+
 ## Merge Order and Dependencies
 
 When multiple PRs are open, determine merge order by:
