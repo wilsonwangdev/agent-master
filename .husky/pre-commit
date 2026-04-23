@@ -1,3 +1,13 @@
+# Pre-commit checks.
+# Currently: single .gitguard pattern scan (~20 lines). Inline is fine.
+#
+# Extract to scripts/ when ANY of these triggers are met:
+# - A second independent check is added (e.g. lint, build verify)
+# - The pattern scan itself exceeds ~40 lines
+# - The hook needs to be reused outside of git (e.g. CI)
+#
+# When extracting: one script per check, hook just calls them in sequence.
+
 GUARD_FILE=".gitguard"
 
 if [ ! -f "$GUARD_FILE" ]; then
