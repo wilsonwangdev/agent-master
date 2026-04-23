@@ -24,7 +24,11 @@ site/        — Generated output (gitignored)
 ```bash
 npm install       # also activates git hooks via husky
 npm run build     # generates site/ from content/
+npm run dev       # build + local preview at http://localhost:3000
+npm run watch     # auto-rebuild on content/ or build/ changes (run in separate terminal)
 ```
+
+Local development: run `npm run watch` in one terminal (auto-rebuilds on file changes), and `npm run dev` in another (serves the site). Refresh browser after rebuild.
 
 ## Safety
 
