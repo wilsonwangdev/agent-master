@@ -28,10 +28,21 @@ npm run build     # generates site/ from content/
 
 ## Safety
 
-- `.gitguard` contains patterns that pre-commit hook will reject
-- When PII is discovered in tool output, add the pattern to `.gitguard` before committing
-- Never write usernames, emails, tokens, or account names from tool output into project files
-- See `rules/pii-protection.md` for the full rule
+- `.gitguard` contains patterns that pre-commit hook (husky) will reject.
+- Never write usernames, emails, tokens, or account names from tool output into project files.
+- When PII is discovered, add the pattern to `.gitguard` before committing.
+- See `rules/pii-protection.md` for the full rule.
+
+## Git Workflow
+
+- Never push directly to `main`. Always: branch → commit → push → PR.
+- Branch from `main`, name with prefix: `infra/`, `content/`, `build/`, `rule/`, `spec/`
+- One concern per branch and per PR. If changes are unrelated, split them.
+- Atomic commits: one logical change, prefixed message explaining why.
+- After PR merge or close: delete the local branch.
+- Before starting work: `git fetch -p && git branch -v` to check stale branches.
+- Keep local main in sync: `git fetch origin && git branch -f main origin/main`
+- See `rules/git-workflow.md` for the full rule.
 
 ## Content Conventions
 
