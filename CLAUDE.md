@@ -50,4 +50,6 @@ Atomic commits with prefixes:
 - Specs define decisions before implementation → `specs/`
 - Skills and rules have quality gates → see their README files
 - Journal captures failures for agent self-evolution → `journal/`
+- Roadmap shows what to work on next → `ROADMAP.md`
+- Contribution guidelines → `CONTRIBUTING.md`
 - This repo dogfoods its own practices
