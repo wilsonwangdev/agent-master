@@ -24,6 +24,7 @@ site/        — Generated output (gitignored)
 ```bash
 npm install       # also activates git hooks via husky
 npm run build     # generates site/ from content/
+npm run dev       # build + local preview server at http://localhost:3000
 ```
 
 ## Safety

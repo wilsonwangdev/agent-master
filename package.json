@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build/build.mjs",
+    "dev": "node build/build.mjs && npx -y serve site",
     "clean": "rm -rf site",
     "clean-branches": "git fetch -p && git branch --merged origin/main | grep -v '\\*\\|main' | xargs -r git branch -d",
     "prepare": "husky"
