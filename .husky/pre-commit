@@ -1,0 +1,37 @@
+# Pre-commit checks.
+# Currently: single .gitguard pattern scan (~20 lines). Inline is fine.
+#
+# Extract to scripts/ when ANY of these triggers are met:
+# - A second independent check is added (e.g. lint, build verify)
+# - The pattern scan itself exceeds ~40 lines
+# - The hook needs to be reused outside of git (e.g. CI)
+#
+# When extracting: one script per check, hook just calls them in sequence.
+
+GUARD_FILE=".gitguard"
+
+if [ ! -f "$GUARD_FILE" ]; then
+  exit 0
+fi
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+FAILED=0
+while IFS= read -r pattern; do
+  [[ -z "$pattern" || "$pattern" == \#* ]] && continue
+  MATCHES=$(echo "$STAGED" | xargs grep -l "$pattern" 2>/dev/null)
+  if [ -n "$MATCHES" ]; then
+    echo "BLOCKED: pattern '$pattern' found in:"
+    echo "$MATCHES" | sed 's/^/  /'
+    FAILED=1
+  fi
+done < "$GUARD_FILE"
+
+if [ "$FAILED" -eq 1 ]; then
+  echo ""
+  echo "Commit rejected. Remove sensitive content or update .gitguard."
+  exit 1
+fi
