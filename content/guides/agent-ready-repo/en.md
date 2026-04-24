@@ -15,9 +15,9 @@ A practical guide to configuring any repository so that AI agents can operate ef
 
 An agent-ready repository is one where an AI agent can enter, understand the project, and execute meaningful tasks with minimal human guidance. This is not about a single file or tool — it's a structural property of the entire project.
 
-## The Entry Point: CLAUDE.md
+## The Entry Point: AGENTS.md
 
-The most critical file. When an agent enters a repository, this is the first thing it reads. It should contain:
+The most critical file. When an agent enters a repository, this is the first thing it reads. Name it `AGENTS.md` and symlink it as `CLAUDE.md`, `.cursorrules`, and `.windsurfrules` so every major agent tool finds it automatically. It should contain:
 
 1. **Project purpose** — one paragraph on what this project does and why
 2. **Architecture map** — directory layout with what each folder contains

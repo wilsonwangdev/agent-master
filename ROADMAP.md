@@ -18,7 +18,7 @@ Current status and next steps for agent-master. Each item links to a GitHub issu
 - [x] Build engineering cleanup: site config, parallelization, constant extraction (#32)
 - [x] First verified skill definition: build code review (#33)
 - [x] Skills ecosystem guide (EN+ZH) (#34)
-- [ ] Make AGENTS.md the canonical entry point with symlinks (#14)
+- [x] Make AGENTS.md the canonical entry point with symlinks (#14)
 - [ ] Add pre-work checklist to prevent PR scope creep (#13)
 - [ ] Merge remaining PRs (#13, #14, #15, #16)
 - [x] GEO: per-page Markdown output and `<link rel="alternate" type="text/markdown">` (SPEC 005 Phase 7 remainder)
