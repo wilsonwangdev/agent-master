@@ -4,12 +4,18 @@ import { marked } from 'marked';
 import { existsSync } from 'node:fs';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
-const CONTENT_DIR = join(ROOT, 'content');
-const TEMPLATE_DIR = join(ROOT, 'build', 'templates');
-const SITE_DIR = join(ROOT, 'site');
-const BASE = process.env.BASE_PATH || '';
-const SITE_URL = process.env.SITE_URL || '';
-const NOINDEX = process.env.NOINDEX === 'true';
+
+const SITE = {
+  name: 'agent-master',
+  tagline: 'AI Native Knowledge Base',
+  repo: 'https://github.com/wilsonwangdev/agent-master',
+  base: process.env.BASE_PATH || '',
+  url: process.env.SITE_URL || '',
+  noindex: process.env.NOINDEX === 'true',
+  contentDir: join(ROOT, 'content'),
+  templateDir: join(ROOT, 'build', 'templates'),
+  outDir: join(ROOT, 'site'),
+};
 
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -34,7 +40,7 @@ async function findFiles(dir, ext) {
 }
 
 async function loadTemplate(name) {
-  return readFile(join(TEMPLATE_DIR, name), 'utf-8');
+  return readFile(join(SITE.templateDir, name), 'utf-8');
 }
 
 function render(template, vars) {
@@ -61,10 +67,29 @@ function buildJsonLd(vars) {
   return `<script type="application/ld+json">${JSON.stringify(ld)}</script>`;
 }
 
+function seoVars({ lang, title, description, canonicalUrl, pairCanonicalUrl, pairLang, lastUpdated, schemaType, ogType }) {
+  return {
+    description,
+    canonicalUrl,
+    pairCanonicalUrl,
+    pairLang,
+    ogLocale: lang === 'en' ? 'en_US' : 'zh_CN',
+    ogType,
+    noindex: SITE.noindex ? '<meta name="robots" content="noindex,follow">' : '',
+    rssUrl: SITE.url ? `${SITE.url}/${lang}/feed.xml` : `${SITE.base}/${lang}/feed.xml`,
+    jsonLd: buildJsonLd({ title, description, lang, canonicalUrl, lastUpdated, type: schemaType }),
+    siteName: SITE.name,
+    siteTagline: SITE.tagline,
+    contributeUrl: `${SITE.repo}/blob/main/CONTRIBUTING.md`,
+  };
+}
+
 async function buildPages() {
-  const files = await findFiles(CONTENT_DIR, '.md');
-  const baseTemplate = await loadTemplate('base.html');
-  const pageTemplate = await loadTemplate('page.html');
+  const [files, baseTemplate, pageTemplate] = await Promise.all([
+    findFiles(SITE.contentDir, '.md'),
+    loadTemplate('base.html'),
+    loadTemplate('page.html'),
+  ]);
   const pages = [];
 
   for (const file of files) {
@@ -72,43 +97,46 @@ async function buildPages() {
     const { meta, body } = parseFrontmatter(raw);
     const html = marked(body);
     const lang = meta.lang || (basename(file).startsWith('zh') ? 'zh' : 'en');
-    const rel = relative(CONTENT_DIR, file)
+    const rel = relative(SITE.contentDir, file)
       .replace(/\.(en|zh)\.md$/, '.md')
       .replace(/\.md$/, '')
       .replace(/\/(en|zh)$/, '')
       .replace(/\/index$/, '');
     const section = rel.split('/')[0] || 'root';
-
     const pairLang = lang === 'en' ? 'zh' : 'en';
-    const pairPath = meta.pair ? `${BASE}/${pairLang}/${rel}/` : '';
     const description = meta.description || extractDescription(html);
-    const canonicalUrl = SITE_URL ? `${SITE_URL}/${lang}/${rel}/` : '';
-    const pairCanonicalUrl = (SITE_URL && meta.pair) ? `${SITE_URL}/${pairLang}/${rel}/` : '';
-    const ogLocale = lang === 'en' ? 'en_US' : 'zh_CN';
-    const noindex = NOINDEX ? '<meta name="robots" content="noindex,follow">' : '';
-    const sectionTitle = section.charAt(0).toUpperCase() + section.slice(1);
-    const homePath = `${BASE}/${lang}/`;
-    const sectionPath = `${BASE}/${lang}/`;
-    const jsonLd = buildJsonLd({ title: meta.title, description, lang, canonicalUrl, lastUpdated: meta.lastUpdated, type: 'Article' });
+    const canonicalUrl = SITE.url ? `${SITE.url}/${lang}/${rel}/` : '';
 
-    const pageHtml = render(pageTemplate, { title: meta.title || '', content: html, lang, pairPath, pairLang, sectionTitle, homePath, sectionPath });
-    const rssUrl = SITE_URL ? `${SITE_URL}/${lang}/feed.xml` : `${BASE}/${lang}/feed.xml`;
+    const pageHtml = render(pageTemplate, {
+      title: meta.title || '', content: html, lang,
+      pairPath: meta.pair ? `${SITE.base}/${pairLang}/${rel}/` : '', pairLang,
+      sectionTitle: section.charAt(0).toUpperCase() + section.slice(1),
+      homePath: `${SITE.base}/${lang}/`,
+      sectionPath: `${SITE.base}/${lang}/`,
+      contributeUrl: `${SITE.repo}/blob/main/CONTRIBUTING.md`,
+    });
     const fullHtml = render(baseTemplate, {
-      title: meta.title || 'agent-master', lang, body: pageHtml, base: BASE,
-      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'article', rssUrl,
+      title: meta.title || SITE.name, lang, body: pageHtml, base: SITE.base,
+      ...seoVars({
+        lang, title: meta.title, description, canonicalUrl,
+        pairCanonicalUrl: (SITE.url && meta.pair) ? `${SITE.url}/${pairLang}/${rel}/` : '',
+        pairLang, lastUpdated: meta.lastUpdated, schemaType: 'Article', ogType: 'article',
+      }),
     });
 
-    const outPath = join(SITE_DIR, lang, rel, 'index.html');
+    const outPath = join(SITE.outDir, lang, rel, 'index.html');
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, fullHtml);
-    pages.push({ title: meta.title, description, lang, section, path: `${BASE}/${lang}/${rel}/`, status: meta.status, lastUpdated: meta.lastUpdated, rel, hasPair: !!meta.pair });
+    pages.push({ title: meta.title, description, lang, section, path: `${SITE.base}/${lang}/${rel}/`, status: meta.status, lastUpdated: meta.lastUpdated, rel, hasPair: !!meta.pair });
   }
   return pages;
 }
 
 async function buildIndex(pages) {
-  const baseTemplate = await loadTemplate('base.html');
-  const indexTemplate = await loadTemplate('index.html');
+  const [baseTemplate, indexTemplate] = await Promise.all([
+    loadTemplate('base.html'),
+    loadTemplate('index.html'),
+  ]);
 
   for (const lang of ['en', 'zh']) {
     const langPages = pages.filter(p => p.lang === lang && p.status !== 'hidden');
@@ -127,45 +155,53 @@ async function buildIndex(pages) {
     }
 
     const pairLang = lang === 'en' ? 'zh' : 'en';
-    const indexHtml = render(indexTemplate, { lang, listings: listingsHtml, pairLang, base: BASE });
     const description = lang === 'en'
-      ? 'AI Native knowledge base for agent practitioners — concepts, guides, curated articles, and agent-ready practices.'
-      : 'AI Native 知识库——面向 agent 实践者的概念、指南、精选文章与 agent-ready 实践。';
-    const canonicalUrl = SITE_URL ? `${SITE_URL}/${lang}/` : '';
-    const pairCanonicalUrl = SITE_URL ? `${SITE_URL}/${pairLang}/` : '';
-    const ogLocale = lang === 'en' ? 'en_US' : 'zh_CN';
-    const noindex = NOINDEX ? '<meta name="robots" content="noindex,follow">' : '';
-    const jsonLd = buildJsonLd({ title: 'agent-master', description, lang, canonicalUrl, type: 'WebSite' });
-    const rssUrl = SITE_URL ? `${SITE_URL}/${lang}/feed.xml` : `${BASE}/${lang}/feed.xml`;
+      ? `${SITE.tagline} for agent practitioners — concepts, guides, curated articles, and agent-ready practices.`
+      : `${SITE.tagline}——面向 agent 实践者的概念、指南、精选文章与 agent-ready 实践。`;
+    const canonicalUrl = SITE.url ? `${SITE.url}/${lang}/` : '';
+
+    const indexHtml = render(indexTemplate, {
+      lang, listings: listingsHtml, pairLang, base: SITE.base,
+      siteName: SITE.name, siteTagline: SITE.tagline,
+      contributeUrl: `${SITE.repo}/blob/main/CONTRIBUTING.md`,
+    });
     const fullHtml = render(baseTemplate, {
-      title: 'agent-master', lang, body: indexHtml, base: BASE,
-      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'website', rssUrl,
+      title: SITE.name, lang, body: indexHtml, base: SITE.base,
+      ...seoVars({
+        lang, title: SITE.name, description, canonicalUrl,
+        pairCanonicalUrl: SITE.url ? `${SITE.url}/${pairLang}/` : '',
+        pairLang, schemaType: 'WebSite', ogType: 'website',
+      }),
     });
 
-    const outPath = join(SITE_DIR, lang, 'index.html');
+    const outPath = join(SITE.outDir, lang, 'index.html');
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, fullHtml);
   }
 
-  const rootRedirect = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${BASE}/en/"></head></html>`;
-  await writeFile(join(SITE_DIR, 'index.html'), rootRedirect);
+  const rootRedirect = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${SITE.base}/en/"></head></html>`;
+  await writeFile(join(SITE.outDir, 'index.html'), rootRedirect);
 }
 
 async function copyAssets() {
   const cssDir = join(ROOT, 'build', 'css');
   const jsDir = join(ROOT, 'build', 'js');
-  await mkdir(join(SITE_DIR, 'assets', 'css'), { recursive: true });
-  await mkdir(join(SITE_DIR, 'assets', 'js'), { recursive: true });
-  if (existsSync(cssDir)) await cp(cssDir, join(SITE_DIR, 'assets', 'css'), { recursive: true });
-  if (existsSync(jsDir)) await cp(jsDir, join(SITE_DIR, 'assets', 'js'), { recursive: true });
+  await Promise.all([
+    mkdir(join(SITE.outDir, 'assets', 'css'), { recursive: true }),
+    mkdir(join(SITE.outDir, 'assets', 'js'), { recursive: true }),
+  ]);
+  const copies = [];
+  if (existsSync(cssDir)) copies.push(cp(cssDir, join(SITE.outDir, 'assets', 'css'), { recursive: true }));
+  if (existsSync(jsDir)) copies.push(cp(jsDir, join(SITE.outDir, 'assets', 'js'), { recursive: true }));
+  await Promise.all(copies);
 }
 
 function pageUrl(page) {
-  return SITE_URL ? `${SITE_URL}/${page.lang}/${page.rel}/` : page.path;
+  return SITE.url ? `${SITE.url}/${page.lang}/${page.rel}/` : page.path;
 }
 
 async function buildSitemap(pages) {
-  if (!SITE_URL) return;
+  if (!SITE.url) return;
   const visible = pages.filter(p => p.status !== 'hidden');
   const pairMap = new Map();
   for (const p of visible) pairMap.set(`${p.lang}:${p.rel}`, p);
@@ -173,7 +209,7 @@ async function buildSitemap(pages) {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n';
   for (const lang of ['en', 'zh']) {
-    xml += `  <url>\n    <loc>${SITE_URL}/${lang}/</loc>\n  </url>\n`;
+    xml += `  <url>\n    <loc>${SITE.url}/${lang}/</loc>\n  </url>\n`;
   }
   for (const p of visible) {
     const url = pageUrl(p);
@@ -187,26 +223,26 @@ async function buildSitemap(pages) {
     xml += '  </url>\n';
   }
   xml += '</urlset>\n';
-  await writeFile(join(SITE_DIR, 'sitemap.xml'), xml);
+  await writeFile(join(SITE.outDir, 'sitemap.xml'), xml);
 }
 
 async function buildRobots() {
   let txt = 'User-agent: *\nAllow: /\n';
-  if (SITE_URL) txt += `\nSitemap: ${SITE_URL}/sitemap.xml\n`;
-  await writeFile(join(SITE_DIR, 'robots.txt'), txt);
+  if (SITE.url) txt += `\nSitemap: ${SITE.url}/sitemap.xml\n`;
+  await writeFile(join(SITE.outDir, 'robots.txt'), txt);
 }
 
 async function buildRSS(pages) {
-  if (!SITE_URL) return;
-  for (const lang of ['en', 'zh']) {
+  if (!SITE.url) return;
+  const feeds = ['en', 'zh'].map(async (lang) => {
     const items = pages.filter(p => p.lang === lang && p.status !== 'hidden');
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n<channel>\n';
-    xml += `  <title>agent-master (${lang.toUpperCase()})</title>\n`;
-    xml += `  <link>${SITE_URL}/${lang}/</link>\n`;
-    xml += `  <description>AI Native Knowledge Base</description>\n`;
+    xml += `  <title>${SITE.name} (${lang.toUpperCase()})</title>\n`;
+    xml += `  <link>${SITE.url}/${lang}/</link>\n`;
+    xml += `  <description>${SITE.tagline}</description>\n`;
     xml += `  <language>${lang}</language>\n`;
-    xml += `  <atom:link href="${SITE_URL}/${lang}/feed.xml" rel="self" type="application/rss+xml" />\n`;
+    xml += `  <atom:link href="${SITE.url}/${lang}/feed.xml" rel="self" type="application/rss+xml" />\n`;
     for (const p of items) {
       xml += '  <item>\n';
       xml += `    <title>${p.title || ''}</title>\n`;
@@ -217,35 +253,34 @@ async function buildRSS(pages) {
       xml += '  </item>\n';
     }
     xml += '</channel>\n</rss>\n';
-    await mkdir(join(SITE_DIR, lang), { recursive: true });
-    await writeFile(join(SITE_DIR, lang, 'feed.xml'), xml);
-  }
+    await mkdir(join(SITE.outDir, lang), { recursive: true });
+    await writeFile(join(SITE.outDir, lang, 'feed.xml'), xml);
+  });
+  await Promise.all(feeds);
 }
 
 async function buildLlmsTxt(pages) {
   const visible = pages.filter(p => p.status !== 'hidden');
-  const base = SITE_URL || '';
-  let txt = '# agent-master\n\n';
-  txt += '> AI Native knowledge base for agent practitioners. Concepts, guides, curated articles, and agent-ready practices for building with AI agents.\n\n';
+  let txt = `# ${SITE.name}\n\n`;
+  txt += `> ${SITE.tagline} for agent practitioners. Concepts, guides, curated articles, and agent-ready practices for building with AI agents.\n\n`;
   for (const section of ['concepts', 'guides', 'curated', 'evangelism']) {
     const items = visible.filter(p => p.lang === 'en' && p.section === section);
     if (!items.length) continue;
     txt += `## ${section.charAt(0).toUpperCase() + section.slice(1)}\n\n`;
     for (const p of items) {
-      const url = base ? `${base}/en/${p.rel}/` : p.path;
+      const url = SITE.url ? `${SITE.url}/en/${p.rel}/` : p.path;
       txt += `- [${p.title}](${url})`;
       if (p.description) txt += `: ${p.description}`;
       txt += '\n';
     }
     txt += '\n';
   }
-  await writeFile(join(SITE_DIR, 'llms.txt'), txt);
+  await writeFile(join(SITE.outDir, 'llms.txt'), txt);
 }
 
 async function buildSitemapMd(pages) {
   const visible = pages.filter(p => p.status !== 'hidden');
-  const base = SITE_URL || '';
-  let md = '# agent-master — Site Map\n\n';
+  let md = `# ${SITE.name} — Site Map\n\n`;
   for (const lang of ['en', 'zh']) {
     md += `## ${lang === 'en' ? 'English' : '中文'}\n\n`;
     const langPages = visible.filter(p => p.lang === lang);
@@ -254,7 +289,7 @@ async function buildSitemapMd(pages) {
     for (const [section, items] of Object.entries(sections)) {
       md += `### ${section.charAt(0).toUpperCase() + section.slice(1)}\n\n`;
       for (const p of items) {
-        const url = base ? `${base}/${lang}/${p.rel}/` : p.path;
+        const url = SITE.url ? `${SITE.url}/${lang}/${p.rel}/` : p.path;
         md += `- [${p.title}](${url})`;
         if (p.description) md += ` — ${p.description}`;
         md += '\n';
@@ -262,20 +297,22 @@ async function buildSitemapMd(pages) {
       md += '\n';
     }
   }
-  await writeFile(join(SITE_DIR, 'sitemap.md'), md);
+  await writeFile(join(SITE.outDir, 'sitemap.md'), md);
 }
 
 async function main() {
   console.log('Building site...');
-  await mkdir(SITE_DIR, { recursive: true });
+  await mkdir(SITE.outDir, { recursive: true });
   const pages = await buildPages();
-  await buildIndex(pages);
-  await copyAssets();
-  await buildSitemap(pages);
-  await buildRobots();
-  await buildRSS(pages);
-  await buildLlmsTxt(pages);
-  await buildSitemapMd(pages);
+  await Promise.all([
+    buildIndex(pages),
+    copyAssets(),
+    buildSitemap(pages),
+    buildRobots(),
+    buildRSS(pages),
+    buildLlmsTxt(pages),
+    buildSitemapMd(pages),
+  ]);
   console.log(`Built ${pages.length} pages → site/`);
 }
 
