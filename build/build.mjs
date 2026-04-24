@@ -107,6 +107,8 @@ async function buildPages() {
     const description = meta.description || extractDescription(html);
     const canonicalUrl = SITE.url ? `${SITE.url}/${lang}/${rel}/` : '';
 
+    const markdownUrl = SITE.url ? `${SITE.url}/${lang}/${rel}/index.md` : `${SITE.base}/${lang}/${rel}/index.md`;
+
     const pageHtml = render(pageTemplate, {
       title: meta.title || '', content: html, lang,
       pairPath: meta.pair ? `${SITE.base}/${pairLang}/${rel}/` : '', pairLang,
@@ -116,7 +118,7 @@ async function buildPages() {
       contributeUrl: `${SITE.repo}/blob/main/CONTRIBUTING.md`,
     });
     const fullHtml = render(baseTemplate, {
-      title: meta.title || SITE.name, lang, body: pageHtml, base: SITE.base,
+      title: meta.title || SITE.name, lang, body: pageHtml, base: SITE.base, markdownUrl,
       ...seoVars({
         lang, title: meta.title, description, canonicalUrl,
         pairCanonicalUrl: (SITE.url && meta.pair) ? `${SITE.url}/${pairLang}/${rel}/` : '',
@@ -125,8 +127,10 @@ async function buildPages() {
     });
 
     const outPath = join(SITE.outDir, lang, rel, 'index.html');
+    const mdOutPath = join(SITE.outDir, lang, rel, 'index.md');
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, fullHtml);
+    await writeFile(mdOutPath, raw);
     pages.push({ title: meta.title, description, lang, section, path: `${SITE.base}/${lang}/${rel}/`, status: meta.status, lastUpdated: meta.lastUpdated, rel, hasPair: !!meta.pair });
   }
   return pages;
