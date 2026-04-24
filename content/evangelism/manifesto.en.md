@@ -1,5 +1,6 @@
 ---
 title: "The AI Native Manifesto"
+description: "A declaration of principles for AI Native software engineering — where AI agent collaboration is a first-class architectural concern, not an afterthought."
 lang: en
 pair: manifesto.zh.md
 lastUpdated: 2026-04-23

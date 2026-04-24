@@ -1,5 +1,6 @@
 ---
 title: "AGENTS.md 作为单一数据源"
+description: "如何设置统一的 agent 入口文件，通过 AGENTS.md 和符号链接在 Claude Code、Cursor、Windsurf 等 AI 编码工具中通用。"
 lang: zh
 pair: en.md
 lastUpdated: 2026-04-24

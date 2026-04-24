@@ -1,5 +1,6 @@
 ---
 title: "AI Native 宣言"
+description: "AI Native 软件工程的原则宣言——将 AI agent 协作作为一等架构关注点，而非事后补充。"
 lang: zh
 pair: manifesto.en.md
 lastUpdated: 2026-04-23
