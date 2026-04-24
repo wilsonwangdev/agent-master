@@ -1,5 +1,6 @@
 ---
 title: "Making a Repository Agent-Ready"
+description: "A practical guide to configuring any repository so AI agents can enter, understand the project, and execute meaningful tasks with minimal human guidance."
 lang: en
 pair: zh.md
 lastUpdated: 2026-04-23

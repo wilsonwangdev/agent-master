@@ -1,5 +1,6 @@
 ---
 title: "让仓库达到 Agent-Ready 状态"
+description: "实践指南：如何配置任意仓库，使 AI agent 能够进入、理解项目并以最少的人类指导执行有意义的任务。"
 lang: zh
 pair: en.md
 lastUpdated: 2026-04-23

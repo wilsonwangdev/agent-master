@@ -1,5 +1,6 @@
 ---
 title: "Harness Engineering"
+description: "The discipline of building agent-ready environments — configuring, structuring, and optimizing projects so AI agents can operate effectively within them."
 lang: en
 pair: zh.md
 lastUpdated: 2026-04-23

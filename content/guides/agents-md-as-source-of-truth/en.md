@@ -1,5 +1,6 @@
 ---
 title: "AGENTS.md as Single Source of Truth"
+description: "How to set up a unified agent entry point that works across Claude Code, Cursor, Windsurf, and other AI coding tools using AGENTS.md with symlinks."
 lang: en
 pair: zh.md
 lastUpdated: 2026-04-24

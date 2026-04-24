@@ -1,5 +1,6 @@
 ---
 title: "Manus：面向 AI Agent 的上下文工程"
+description: "对 Manus 上下文工程经验的解读——在生产级 agent 系统中管理 LLM 上下文的实践模式。"
 lang: zh
 pair: manus-context-engineering.en.md
 lastUpdated: 2026-04-23
