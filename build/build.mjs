@@ -89,15 +89,16 @@ async function buildPages() {
     const jsonLd = buildJsonLd({ title: meta.title, description, lang, canonicalUrl, lastUpdated: meta.lastUpdated, type: 'Article' });
 
     const pageHtml = render(pageTemplate, { title: meta.title || '', content: html, lang, pairPath, pairLang });
+    const rssUrl = SITE_URL ? `${SITE_URL}/${lang}/feed.xml` : `${BASE}/${lang}/feed.xml`;
     const fullHtml = render(baseTemplate, {
       title: meta.title || 'agent-master', lang, body: pageHtml, base: BASE,
-      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'article',
+      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'article', rssUrl,
     });
 
     const outPath = join(SITE_DIR, lang, rel, 'index.html');
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, fullHtml);
-    pages.push({ title: meta.title, description, lang, section, path: `${BASE}/${lang}/${rel}/`, status: meta.status, lastUpdated: meta.lastUpdated, rel });
+    pages.push({ title: meta.title, description, lang, section, path: `${BASE}/${lang}/${rel}/`, status: meta.status, lastUpdated: meta.lastUpdated, rel, hasPair: !!meta.pair });
   }
   return pages;
 }
@@ -132,9 +133,10 @@ async function buildIndex(pages) {
     const ogLocale = lang === 'en' ? 'en_US' : 'zh_CN';
     const noindex = NOINDEX ? '<meta name="robots" content="noindex,follow">' : '';
     const jsonLd = buildJsonLd({ title: 'agent-master', description, lang, canonicalUrl, type: 'WebSite' });
+    const rssUrl = SITE_URL ? `${SITE_URL}/${lang}/feed.xml` : `${BASE}/${lang}/feed.xml`;
     const fullHtml = render(baseTemplate, {
       title: 'agent-master', lang, body: indexHtml, base: BASE,
-      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'website',
+      description, canonicalUrl, pairCanonicalUrl, pairLang, ogLocale, noindex, jsonLd, ogType: 'website', rssUrl,
     });
 
     const outPath = join(SITE_DIR, lang, 'index.html');
@@ -155,12 +157,122 @@ async function copyAssets() {
   if (existsSync(jsDir)) await cp(jsDir, join(SITE_DIR, 'assets', 'js'), { recursive: true });
 }
 
+function pageUrl(page) {
+  return SITE_URL ? `${SITE_URL}/${page.lang}/${page.rel}/` : page.path;
+}
+
+async function buildSitemap(pages) {
+  if (!SITE_URL) return;
+  const visible = pages.filter(p => p.status !== 'hidden');
+  const pairMap = new Map();
+  for (const p of visible) pairMap.set(`${p.lang}:${p.rel}`, p);
+
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n';
+  for (const lang of ['en', 'zh']) {
+    xml += `  <url>\n    <loc>${SITE_URL}/${lang}/</loc>\n  </url>\n`;
+  }
+  for (const p of visible) {
+    const url = pageUrl(p);
+    xml += `  <url>\n    <loc>${url}</loc>\n`;
+    if (p.lastUpdated) xml += `    <lastmod>${p.lastUpdated}</lastmod>\n`;
+    const pairLang = p.lang === 'en' ? 'zh' : 'en';
+    if (p.hasPair && pairMap.has(`${pairLang}:${p.rel}`)) {
+      xml += `    <xhtml:link rel="alternate" hreflang="${p.lang}" href="${url}" />\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="${pairLang}" href="${pageUrl(pairMap.get(`${pairLang}:${p.rel}`))}" />\n`;
+    }
+    xml += '  </url>\n';
+  }
+  xml += '</urlset>\n';
+  await writeFile(join(SITE_DIR, 'sitemap.xml'), xml);
+}
+
+async function buildRobots() {
+  let txt = 'User-agent: *\nAllow: /\n';
+  if (SITE_URL) txt += `\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+  await writeFile(join(SITE_DIR, 'robots.txt'), txt);
+}
+
+async function buildRSS(pages) {
+  if (!SITE_URL) return;
+  for (const lang of ['en', 'zh']) {
+    const items = pages.filter(p => p.lang === lang && p.status !== 'hidden');
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n<channel>\n';
+    xml += `  <title>agent-master (${lang.toUpperCase()})</title>\n`;
+    xml += `  <link>${SITE_URL}/${lang}/</link>\n`;
+    xml += `  <description>AI Native Knowledge Base</description>\n`;
+    xml += `  <language>${lang}</language>\n`;
+    xml += `  <atom:link href="${SITE_URL}/${lang}/feed.xml" rel="self" type="application/rss+xml" />\n`;
+    for (const p of items) {
+      xml += '  <item>\n';
+      xml += `    <title>${p.title || ''}</title>\n`;
+      xml += `    <link>${pageUrl(p)}</link>\n`;
+      xml += `    <guid>${pageUrl(p)}</guid>\n`;
+      if (p.description) xml += `    <description>${p.description}</description>\n`;
+      if (p.lastUpdated) xml += `    <pubDate>${new Date(p.lastUpdated).toUTCString()}</pubDate>\n`;
+      xml += '  </item>\n';
+    }
+    xml += '</channel>\n</rss>\n';
+    await mkdir(join(SITE_DIR, lang), { recursive: true });
+    await writeFile(join(SITE_DIR, lang, 'feed.xml'), xml);
+  }
+}
+
+async function buildLlmsTxt(pages) {
+  const visible = pages.filter(p => p.status !== 'hidden');
+  const base = SITE_URL || '';
+  let txt = '# agent-master\n\n';
+  txt += '> AI Native knowledge base for agent practitioners. Concepts, guides, curated articles, and agent-ready practices for building with AI agents.\n\n';
+  for (const section of ['concepts', 'guides', 'curated', 'evangelism']) {
+    const items = visible.filter(p => p.lang === 'en' && p.section === section);
+    if (!items.length) continue;
+    txt += `## ${section.charAt(0).toUpperCase() + section.slice(1)}\n\n`;
+    for (const p of items) {
+      const url = base ? `${base}/en/${p.rel}/` : p.path;
+      txt += `- [${p.title}](${url})`;
+      if (p.description) txt += `: ${p.description}`;
+      txt += '\n';
+    }
+    txt += '\n';
+  }
+  await writeFile(join(SITE_DIR, 'llms.txt'), txt);
+}
+
+async function buildSitemapMd(pages) {
+  const visible = pages.filter(p => p.status !== 'hidden');
+  const base = SITE_URL || '';
+  let md = '# agent-master — Site Map\n\n';
+  for (const lang of ['en', 'zh']) {
+    md += `## ${lang === 'en' ? 'English' : '中文'}\n\n`;
+    const langPages = visible.filter(p => p.lang === lang);
+    const sections = {};
+    for (const p of langPages) (sections[p.section] ??= []).push(p);
+    for (const [section, items] of Object.entries(sections)) {
+      md += `### ${section.charAt(0).toUpperCase() + section.slice(1)}\n\n`;
+      for (const p of items) {
+        const url = base ? `${base}/${lang}/${p.rel}/` : p.path;
+        md += `- [${p.title}](${url})`;
+        if (p.description) md += ` — ${p.description}`;
+        md += '\n';
+      }
+      md += '\n';
+    }
+  }
+  await writeFile(join(SITE_DIR, 'sitemap.md'), md);
+}
+
 async function main() {
   console.log('Building site...');
   await mkdir(SITE_DIR, { recursive: true });
   const pages = await buildPages();
   await buildIndex(pages);
   await copyAssets();
+  await buildSitemap(pages);
+  await buildRobots();
+  await buildRSS(pages);
+  await buildLlmsTxt(pages);
+  await buildSitemapMd(pages);
   console.log(`Built ${pages.length} pages → site/`);
 }
 
