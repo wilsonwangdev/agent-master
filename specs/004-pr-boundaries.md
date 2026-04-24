@@ -36,7 +36,7 @@ A PR is ready to merge when:
 - [ ] Commit messages are atomic and prefixed
 - [ ] One concern — no unrelated changes
 - [ ] Bilingual content has both languages (or is explicitly marked draft)
-- [ ] If it modifies CLAUDE.md, the changes are consistent with existing sections
+- [ ] If it modifies AGENTS.md, the changes are consistent with existing sections
 - [ ] Dependencies on other PRs are declared and already merged
 
 ## Merge Strategy
