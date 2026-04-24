@@ -4,6 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  {{noindex}}
+  <link rel="canonical" href="{{canonicalUrl}}">
+  <link rel="alternate" hreflang="{{lang}}" href="{{canonicalUrl}}">
+  <link rel="alternate" hreflang="{{pairLang}}" href="{{pairCanonicalUrl}}">
+  <link rel="alternate" hreflang="x-default" href="{{canonicalUrl}}">
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:type" content="{{ogType}}">
+  <meta property="og:url" content="{{canonicalUrl}}">
+  <meta property="og:locale" content="{{ogLocale}}">
+  <meta property="og:site_name" content="agent-master">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{title}}">
+  <meta name="twitter:description" content="{{description}}">
+  {{jsonLd}}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet">

@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - run: BASE_PATH=/agent-master npm run build
+      - run: BASE_PATH=/agent-master SITE_URL=https://agent-master-green.vercel.app NOINDEX=true npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
