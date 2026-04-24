@@ -84,6 +84,14 @@ Before creating a branch, verify:
 - All content must come from authoritative, verified sources
 - Empty structure > low-quality placeholder content
 
+### Content Layers (see SPEC 006)
+
+All artifacts belong to one of three layers. Identify the layer before writing:
+
+- **Layer 1 — Universal Content** (`content/`): No project-specific references. Must be useful to any practitioner with any tech stack. Use generic examples; if illustrating with this project, use a clearly marked callout block.
+- **Layer 2 — Distributable Tools** (`skills/`, `rules/`, quickstart prompt): Must work in any repo without modification, or clearly document what to adapt. No hardcoded paths or scripts.
+- **Layer 3 — Project Practice** (`AGENTS.md`, `journal/`, `.claude/`): Can and should reference specific files, scripts, and conventions of this repository.
+
 ## Commit Conventions
 
 Atomic commits with prefixes:
