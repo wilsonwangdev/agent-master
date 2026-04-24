@@ -11,7 +11,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "marked": "^15.0.0"
+    "marked": "^15.0.0",
+    "@vercel/analytics": "latest"
   },
   "devDependencies": {
     "husky": "^9.1.7"
