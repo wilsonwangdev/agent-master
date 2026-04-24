@@ -25,6 +25,7 @@ When diagnosing issues with external systems, follow this strict order. Do not s
 - Use official CLI (`vercel`, `gh`, `npx`, etc.) to query real state
 - Use MCP servers if available for the platform
 - Check deployment logs, dashboard status, environment variables
+- Check for newly opened remote PRs from platform agents or automation — they are signals of attempted fixes. But always inspect the actual diff, not just the PR description.
 
 ### 3. Official documentation third / 然后查官方文档
 
@@ -40,7 +41,11 @@ When diagnosing issues with external systems, follow this strict order. Do not s
 
 This rule was created after the Vercel Analytics incident: the agent skipped reading 4 recent commits where the user had already tried both `@vercel/analytics` package and plain HTML script approaches. The agent then repeated the same failed paths. Reading the commits first would have immediately narrowed the problem space.
 
+Additionally, the Vercel platform itself created a draft PR via Vercel Agent. That PR contained a useful signal (the correct script URL and package choice) but its body did not match the actual diff. This shows why external agent output must be treated as evidence to inspect, not as truth to trust blindly.
+
 此规则源于 Vercel Analytics 事件：agent 跳过了用户已经尝试过两种方案的 4 个最近提交，然后重复了相同的失败路径。先读提交记录本可以立即缩小问题范围。
+
+此外，Vercel 平台本身通过 Vercel Agent 创建了一个 draft PR。该 PR 提供了有价值的信号（正确的 script URL 和 package 选择），但其描述与实际 diff 并不一致。这说明外部 agent 的输出应被视为需要检查的证据，而不是可盲目信任的事实。
 
 ## Anti-Patterns / 反模式
 
