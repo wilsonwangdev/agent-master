@@ -58,7 +58,8 @@ Before creating a branch, verify:
 - [ ] Does this change have measurable impact at current scale? If not, record the signal for later instead of acting now.
 - [ ] Have you checked if a community skill already solves this? (skills.sh, Claude Code skills, cursor.directory)
 - [ ] Will this change affect Lighthouse scores? If touching CSS, templates, or fonts, review the Quality Baseline in this file.
-- [ ] After modifying `build/`, will you run the build code review skill (`skills/build-code-review.md`)?
+- [ ] After modifying `build/`, will you run the build code review skill (`skills/build-code-review/SKILL.md`)?
+- [ ] After modifying CSS, templates, or interactive components, will you run the frontend interaction review skill (`skills/frontend-interaction-review/SKILL.md`)?
 
 ### When diagnosing external system issues (Vercel, GitHub Actions, analytics, MCP, etc.)
 
@@ -117,7 +118,9 @@ Atomic commits with prefixes:
 
 ## Post-Change Review
 
-After modifying files under `build/`, run the build code review skill (`skills/build-code-review.md`) to check for code smells before committing. This catches issues like unparallelized awaits, hardcoded constants, and growing function signatures that agents tend to miss during feature-focused work.
+After modifying files under `build/`, run the build code review skill (`skills/build-code-review/SKILL.md`) to check for code smells before committing. This catches issues like unparallelized awaits, hardcoded constants, and growing function signatures that agents tend to miss during feature-focused work.
+
+After modifying CSS, templates, or interactive components, run the frontend interaction review skill (`skills/frontend-interaction-review/SKILL.md`) to check for tooltip clipping, overflow conflicts, hover affordance gaps, missing transitions, and responsive parity.
 
 ## Quality Baseline
 
